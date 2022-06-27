@@ -7,6 +7,7 @@ import org.apache.cordova.CordovaPlugin;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.security.Key;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.util.Random;
@@ -18,6 +19,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+//temp nabil//
 import shaded.org.apache.commons.codec.binary.Hex;
 
 /**
@@ -39,6 +41,11 @@ public class AES256 extends CordovaPlugin {
     private static final String PBKDF2_SALT = "hY0wTq6xwc6ni01G";
     private static final Random RANDOM = new SecureRandom();
 
+    
+  //temp nabil//private static final String SYMMETRIC_ENCRYPTION = "AES/CBC/PKCS7Padding";
+    public static final String UTF8 = "UTF-8";
+    public static final String AES = "AES";
+    
     @Override
     public boolean execute(final String action, final JSONArray args,  final CallbackContext callbackContext) throws JSONException {
         try {
@@ -78,57 +85,36 @@ public class AES256 extends CordovaPlugin {
         return  true;
     }
 
-    /**
-     * <p>
-     * To perform the AES256 encryption
-     * </p>
-     *
-     * @param secureKey A 32 bytes string, which will used as input key for AES256 encryption
-     * @param value     A string which will be encrypted
-     * @param iv        A 16 bytes string, which will used as initial vector for AES256 encryption
-     * @return AES Encrypted string
-     * @throws Exception
-     */
-    private String encrypt(String secureKey, String value, String iv) throws Exception {
-        byte[] pbkdf2SecuredKey = generatePBKDF2(secureKey.toCharArray(), PBKDF2_SALT.getBytes("UTF-8"),
-                PBKDF2_ITERATION_COUNT, PBKDF2_KEY_LENGTH);
-
-        IvParameterSpec ivParameterSpec = new IvParameterSpec(iv.getBytes("UTF-8"));
-        SecretKeySpec secretKeySpec = new SecretKeySpec(pbkdf2SecuredKey, "AES");
-
-        Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
-        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
-
-        byte[] encrypted = cipher.doFinal(value.getBytes());
-
-        return Base64.encodeToString(encrypted, Base64.DEFAULT);
-
+    public static String encrypt(String secureKey, String value, String iv) throws Exception
+    {
+	//issue #1231427 appeared during stress testing : commenting addProvider and moving it to the static block at the beginning of this class to avoid blocking threads
+	//Security.addProvider(new BouncyCastleProvider());
+	SecretKey secretKey = new SecretKeySpec(secureKey.getBytes(), AES);
+	
+	Cipher c = Cipher.getInstance(CIPHER_TRANSFORMATION  /*SYMMETRIC_ENCRYPTION*/);
+	byte[] ivByte = iv.getBytes();
+	IvParameterSpec initialisationVector = new IvParameterSpec(ivByte);
+	c.init(Cipher.ENCRYPT_MODE, secretKey, initialisationVector);
+	byte[] encVal = c.doFinal(value.getBytes(UTF8));
+	java.util.Base64.Encoder encoder = java.util.Base64.getEncoder();
+	return new String(encoder.encode(encVal), UTF8);
     }
 
-    /**
-     * <p>
-     * To perform the AES256 decryption
-     * </p>
-     *
-     * @param secureKey A 32 bytes string, which will used as input key for AES256 decryption
-     * @param value     A 16 bytes string, which will used as initial vector for AES256 decryption
-     * @param iv        An AES256 encrypted data which will be decrypted
-     * @return AES Decrypted string
-     * @throws Exception
-     */
-    private String decrypt(String secureKey, String value, String iv) throws Exception {
-        byte[] pbkdf2SecuredKey = generatePBKDF2(secureKey.toCharArray(), PBKDF2_SALT.getBytes("UTF-8"),
-                PBKDF2_ITERATION_COUNT, PBKDF2_KEY_LENGTH);
-
-        IvParameterSpec ivParameterSpec = new IvParameterSpec(iv.getBytes("UTF-8"));
-        SecretKeySpec secretKeySpec = new SecretKeySpec(pbkdf2SecuredKey, "AES");
-
-        Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
-        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
-
-        byte[] original = cipher.doFinal(Base64.decode(value, Base64.DEFAULT));
-
-        return new String(original);
+    
+    
+    public static String decrypt(String secureKey, String value, String iv) throws Exception
+    {
+	//issue #1231427 appeared during stress testing : commenting addProvider and moving it to the static block at the beginning of this class to avoid blocking threads
+	//Security.addProvider(new BouncyCastleProvider());
+	SecretKey secretKey = new SecretKeySpec(secureKey.getBytes(), AES);
+	
+	java.util.Base64.Decoder decoder = java.util.Base64.getDecoder();
+	byte[] ivByte = iv.getBytes();
+	IvParameterSpec initialisationVector = new IvParameterSpec(ivByte);
+	Cipher c = Cipher.getInstance(CIPHER_TRANSFORMATION /*SYMMETRIC_ENCRYPTION*/ );
+	c.init(Cipher.DECRYPT_MODE, secretKey, initialisationVector);
+	byte[] decValue = c.doFinal(decoder.decode(value));
+	return new String(decValue, UTF8);
     }
 
     /**
@@ -162,6 +148,7 @@ public class AES256 extends CordovaPlugin {
         byte[] secureKeyInBytes = generatePBKDF2(password.toCharArray(), generateRandomSalt(),
                 PBKDF2_ITERATION_COUNT, SECURE_KEY_LENGTH);
         return Hex.encodeHexString(secureKeyInBytes);
+        //temp nabil//return null;
     }
 
     /**
@@ -177,6 +164,7 @@ public class AES256 extends CordovaPlugin {
         byte[] secureIVInBytes = generatePBKDF2(password.toCharArray(), generateRandomSalt(),
                 PBKDF2_ITERATION_COUNT, SECURE_IV_LENGTH);
         return Hex.encodeHexString(secureIVInBytes);
+      //temp nabil//return null;
     }
 
     /**
