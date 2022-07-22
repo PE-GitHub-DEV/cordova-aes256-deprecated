@@ -19,7 +19,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-//temp nabil//
+
 import shaded.org.apache.commons.codec.binary.Hex;
 
 /**
@@ -42,7 +42,7 @@ public class AES256 extends CordovaPlugin {
     private static final Random RANDOM = new SecureRandom();
 
     
-  //temp nabil//private static final String SYMMETRIC_ENCRYPTION = "AES/CBC/PKCS7Padding";
+
     public static final String UTF8 = "UTF-8";
     public static final String AES = "AES";
     
@@ -148,7 +148,7 @@ public class AES256 extends CordovaPlugin {
         byte[] secureKeyInBytes = generatePBKDF2(password.toCharArray(), generateRandomSalt(),
                 PBKDF2_ITERATION_COUNT, SECURE_KEY_LENGTH);
         return Hex.encodeHexString(secureKeyInBytes);
-        //temp nabil//return null;
+        
     }
 
     /**
@@ -164,7 +164,7 @@ public class AES256 extends CordovaPlugin {
         byte[] secureIVInBytes = generatePBKDF2(password.toCharArray(), generateRandomSalt(),
                 PBKDF2_ITERATION_COUNT, SECURE_IV_LENGTH);
         return Hex.encodeHexString(secureIVInBytes);
-      //temp nabil//return null;
+      
     }
 
     /**
